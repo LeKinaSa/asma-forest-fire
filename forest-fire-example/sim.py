@@ -10,6 +10,8 @@ from mesa.time import RandomActivation
 from mesa.space import Grid
 from mesa.datacollection import DataCollector
 from mesa.batchrunner import BatchRunner
+from mesa.visualization.modules import CanvasGrid
+from mesa.visualization.ModularVisualization import ModularServer
 
 class TreeCell(Agent):
     '''
@@ -49,22 +51,22 @@ class ForestFire(Model):
     '''
     Simple Forest Fire model.
     '''
-    def __init__(self, height, width, density):
+    def __init__(self, width, height, density):
         '''
         Create a new forest fire model.
         
         Args:
-            height, width: The size of the grid to model
+            width, height: The size of the grid to model
             density: What fraction of grid cells have a tree in them.
         '''
         # Initialize model parameters
-        self.height = height
         self.width = width
+        self.height = height
         self.density = density
         
         # Set up model objects
         self.schedule = RandomActivation(self)
-        self.grid = Grid(height, width, torus=False)
+        self.grid = Grid(width, height, torus=False)
         self.dc = DataCollector({"Fine": lambda m: self.count_type(m, "Fine"),
                                 "On Fire": lambda m: self.count_type(m, "On Fire"),
                                 "Burned Out": lambda m: self.count_type(m, "Burned Out")})
@@ -78,7 +80,7 @@ class ForestFire(Model):
                     # Set all trees in the first column on fire.
                     if x == 0:
                         new_tree.condition = "On Fire"
-                    self.grid[y][x] = new_tree
+                    self.grid[x][y] = new_tree
                     self.schedule.add(new_tree)
         self.running = True
         
@@ -103,40 +105,63 @@ class ForestFire(Model):
                 count += 1
         return count
 
-fire = ForestFire(100, 100, 0.6)
-fire.run_model()
-results = fire.dc.get_model_vars_dataframe()
-print(results)
-sns.lineplot(data=results)
-plt.show()
+def agent_portrayal(agent :TreeCell):
+    state_to_color = {
+        "Fine" : "green",
+        "On Fire" : "red",
+        "Burned Out" : "black"
+    }
+    portrayal = {"Shape": "rect",
+                 "Color": state_to_color[agent.condition],
+                 "Filled": "true",
+                 "Layer": 0,
+                 "w": 0.9,
+                 "h": 0.9
+                 }
+    return portrayal
 
-fire = ForestFire(100, 100, 0.8)
-fire.run_model()
-results = fire.dc.get_model_vars_dataframe()
-sns.lineplot(data=results)
-plt.show()
+grid = CanvasGrid(agent_portrayal, 20, 20, 900, 900)
+server = ModularServer(ForestFire,
+                       [grid],
+                       "Forest Fire",
+                       {"width": 20, "height": 20, "density": 0.7})
+server.port = 8521 # The default
+server.launch()
 
-param_set = dict(height=[50], # Height and width are constant
-                 width=[50],
-                 # Vary density from 0.01 to 1, in 0.01 increments:
-                 density=np.linspace(0,1,101)[1:])
+# fire = ForestFire(100, 100, 0.6)
+# fire.run_model()
+# results = fire.dc.get_model_vars_dataframe()
+# print(results)
+# sns.lineplot(data=results)
+# plt.show()
 
-# At the end of each model run, calculate the fraction of trees which are Burned Out
-model_reporter = {"BurnedOut": lambda m: (ForestFire.count_type(m, "Burned Out") / 
-                                          m.schedule.get_agent_count()) }
+# fire = ForestFire(100, 100, 0.8)
+# fire.run_model()
+# results = fire.dc.get_model_vars_dataframe()
+# sns.lineplot(data=results)
+# plt.show()
 
-# Create the batch runner
-param_run = BatchRunner(ForestFire, param_set, model_reporters=model_reporter)
-param_run.run_all()
-df = param_run.get_model_vars_dataframe()
-df.head()
-plt.scatter(df.density, df.BurnedOut)
-plt.xlim(0,1)
-plt.show()
+# param_set = dict(height=[50], # Height and width are constant
+#                  width=[50],
+#                  # Vary density from 0.01 to 1, in 0.01 increments:
+#                  density=np.linspace(0,1,101)[1:])
 
-param_run = BatchRunner(ForestFire, param_set, iterations=5, model_reporters=model_reporter)
-param_run.run_all()
-df = param_run.get_model_vars_dataframe()
-plt.scatter(df.density, df.BurnedOut)
-plt.xlim(0,1)
-plt.show()
+# # At the end of each model run, calculate the fraction of trees which are Burned Out
+# model_reporter = {"BurnedOut": lambda m: (ForestFire.count_type(m, "Burned Out") / 
+#                                           m.schedule.get_agent_count()) }
+
+# # Create the batch runner
+# param_run = BatchRunner(ForestFire, param_set, model_reporters=model_reporter)
+# param_run.run_all()
+# df = param_run.get_model_vars_dataframe()
+# df.head()
+# plt.scatter(df.density, df.BurnedOut)
+# plt.xlim(0,1)
+# plt.show()
+
+# param_run = BatchRunner(ForestFire, param_set, iterations=5, model_reporters=model_reporter)
+# param_run.run_all()
+# df = param_run.get_model_vars_dataframe()
+# plt.scatter(df.density, df.BurnedOut)
+# plt.xlim(0,1)
+# plt.show()
