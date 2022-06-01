@@ -25,9 +25,10 @@ class ForestFire(Model):
         # Set up model objects
         self.schedule = RandomActivation(self)
         self.grid = Grid(width, height, torus=False)
-        self.dc = DataCollector({"Fine": lambda m: self.count_type(m, "Fine"),
-                                "On Fire": lambda m: self.count_type(m, "On Fire"),
-                                "Burned Out": lambda m: self.count_type(m, "Burned Out")})
+        self.dc = DataCollector({"Empty": lambda m: self.count_type(m, "Empty"),
+                                 "Fine": lambda m: self.count_type(m, "Fine"),
+                                 "On Fire": lambda m: self.count_type(m, "On Fire"),
+                                 "Burned Out": lambda m: self.count_type(m, "Burned Out")})
         
         # Place a tree in each cell with Prob = density
         for x in range(self.width):
