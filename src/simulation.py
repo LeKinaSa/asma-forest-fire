@@ -11,6 +11,7 @@ from treecells.Simple import Simple
 
 def agent_portrayal(agent):
     state_to_color = {
+        "Empty": "white",
         "Fine" : "green",
         "On Fire" : "red",
         "Burned Out" : "black"

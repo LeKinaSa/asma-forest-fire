@@ -32,14 +32,13 @@ class ForestFire(Model):
         # Place a tree in each cell with Prob = density
         for x in range(self.width):
             for y in range(self.height):
-                if random.random() < self.density:
-                    # Create a tree
-                    new_tree = TreeCell(self, (x, y))
-                    # Set all trees in the first column on fire.
-                    if x == 0:
-                        new_tree.condition = "On Fire"
-                    self.grid[x][y] = new_tree
-                    self.schedule.add(new_tree)
+                # Create a tree
+                new_tree = TreeCell(self, (x, y), random.random() < self.density)
+                # Set all trees in the first column on fire.
+                if x == 0:
+                    new_tree.set_on_fire()
+                self.grid[x][y] = new_tree
+                self.schedule.add(new_tree)
         self.running = True
         
     def step(self):

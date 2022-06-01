@@ -7,13 +7,13 @@ class Simple(Agent):
     
     Attributes:
         x, y: Grid coordinates
-        condition: Can be "Fine", "On Fire", or "Burned Out"
+        condition: Can be "Empty", "Fine", "On Fire", or "Burned Out"
         unique_id: (x,y) tuple. 
     
     unique_id isn't strictly necessary here, but it's good practice to give one to each
     agent anyway.
     '''
-    def __init__(self, model, pos):
+    def __init__(self, model, pos, tree):
         '''
         Create a new tree.
         Args:
@@ -22,8 +22,12 @@ class Simple(Agent):
         super().__init__(pos, model)
         self.pos = pos
         self.unique_id = pos
-        self.condition = "Fine"
-        
+        self.condition = "Fine" if tree else "Empty"
+    
+    def set_on_fire(self):
+        if self.condition == "Fine":
+            self.condition = "On Fire"
+
     def step(self):
         '''
         If the tree is on fire, spread it to fine trees nearby.
@@ -31,6 +35,5 @@ class Simple(Agent):
         if self.condition == "On Fire":
             neighbors = self.model.grid.get_neighbors(self.pos, moore=False)
             for neighbor in neighbors:
-                if neighbor.condition == "Fine":
-                    neighbor.condition = "On Fire"
+                neighbor.set_on_fire()
             self.condition = "Burned Out"
