@@ -32,7 +32,7 @@ class SingleSpread(Agent):
 
     def step(self):
         '''
-        Advance 1 step into the simulation
+        Advance 1 step in the simulation.
         '''
         if self.advance:
             self.advance_step()
@@ -42,6 +42,7 @@ class SingleSpread(Agent):
     def advance_step(self):
         '''
         If the tree is on fire, spread it to fine trees nearby.
+        Only spread the fire if the tree has caught fire the last "step" (advance step).
         '''
         if self.last_condition == "On Fire":
             neighbors = self.model.grid.get_neighbors(self.pos, moore=False)
@@ -52,7 +53,7 @@ class SingleSpread(Agent):
     
     def estabilize_step(self):
         '''
-        Estabilize tree status so the fire only spreads once every "step" (in this case, it will be once every 2 steps)
+        Estabilize tree condition so the fire only spreads once every "step" (in this case, it will be once every 2 steps).
         '''
         self.last_condition = self.condition
         self.advance = True

@@ -24,27 +24,47 @@ class DrosselSchwabl(Agent):
         self.pos = pos
         self.unique_id = pos
         self.condition = "Fine" if tree else "Empty"
+        self.last_condition = self.condition
+        self.advance = True
         self.p = 0.1
         self.f = 0.1
-    
+
     def set_on_fire(self):
         if self.condition == "Fine":
             self.condition = "On Fire"
-        
+    
     def step(self):
         '''
-        If the tree is on fire, spread it to fine trees nearby.
+        Advance 1 step in the simulation.
         '''
-        if self.condition == "Empty":
+        if self.advance:
+            self.advance_step()
+        else:
+            self.estabilize_step()
+        self.advance = not self.advance
+
+    def advance_step(self):
+        '''
+        If the cell is empty, grow a tree with probability p.
+        If the tree is on fire, spread it to fine trees nearby.
+        If the tree is fine, catch fire with probability f.
+        '''
+        if self.last_condition == "Empty":
             if random.random() < self.p:
                 self.condition = "Fine"
 
-        if self.condition == "On Fire":
+        if self.last_condition == "On Fire":
             neighbors = self.model.grid.get_neighbors(self.pos, moore=False)
             for neighbor in neighbors:
                 neighbor.set_on_fire()
             self.condition = "Burned Out"
         
-        if self.condition == "Fine":
+        if self.last_condition == "Fine":
             if random.random() < self.f:
                 self.condition = "On Fire"
+    
+    def estabilize_step(self):
+        '''
+        Estabilize tree condition so the fire only spreads once every "step" (in this case, it will be once every 2 steps).
+        '''
+        self.last_condition = self.condition
