@@ -1,19 +1,21 @@
+import random
+
 from mesa import Agent
 
 
 class SingleSpread(Agent):
     '''
-    A tree cell.
+    A simple tree cell, where the fire only advances 1 cell at a time.
     
     Attributes:
         x, y: Grid coordinates
         condition: Can be "Empty", "Fine", "On Fire", or "Burned Out"
-        unique_id: (x,y) tuple. 
+        unique_id: (x,y) tuple.
+        forest_density: density of the forest.
     
-    unique_id isn't strictly necessary here, but it's good practice to give one to each
-    agent anyway.
+    unique_id isn't strictly necessary here, but it's good practice to give one to each agent anyway.
     '''
-    def __init__(self, model, pos, tree):
+    def __init__(self, model, pos, forest_density, p, f):
         '''
         Create a new tree.
         Args:
@@ -22,7 +24,10 @@ class SingleSpread(Agent):
         super().__init__(pos, model)
         self.pos = pos
         self.unique_id = pos
-        self.condition = "Fine" if tree else "Empty"
+        self.condition = "Fine" if random.random() < forest_density else "Empty"
+        # Set all trees in the first column on fire.
+        if self.pos[0] == 0:
+            self.set_on_fire()
         self.last_condition = self.condition
         self.advance = True
     

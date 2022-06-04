@@ -9,7 +9,7 @@ class ForestFire(Model):
     '''
     Simple Forest Fire model.
     '''
-    def __init__(self, width, height, density, TreeCell):
+    def __init__(self, width, height, density, TreeCell, p, f):
         '''
         Create a new forest fire model.
         
@@ -21,6 +21,8 @@ class ForestFire(Model):
         self.width = width
         self.height = height
         self.density = density
+        self.p = p
+        self.f = f
         
         # Set up model objects
         self.schedule = RandomActivation(self)
@@ -34,13 +36,11 @@ class ForestFire(Model):
         for x in range(self.width):
             for y in range(self.height):
                 # Create a tree
-                new_tree = TreeCell(self, (x, y), random.random() < self.density)
-                # Set all trees in the first column on fire.
-                if x == 0:
-                    new_tree.set_on_fire()
+                new_tree = TreeCell(self, (x, y), self.density, self.p, self.f)
                 self.grid[x][y] = new_tree
                 self.schedule.add(new_tree)
         self.running = True
+        self.steps = 0
         
     def step(self):
         '''
@@ -48,9 +48,10 @@ class ForestFire(Model):
         '''
         self.schedule.step()
         self.dc.collect(self)
-        # Halt if no more fire
-        if self.count_type(self, "On Fire") == 0:
+        # Halt if no more fire or too much iterations
+        if self.count_type(self, "On Fire") == 0 or self.steps > 1000:
             self.running = False
+        self.steps += 1
     
     @staticmethod
     def count_type(model, tree_condition):

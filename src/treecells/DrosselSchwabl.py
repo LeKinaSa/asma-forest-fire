@@ -9,12 +9,14 @@ class DrosselSchwabl(Agent):
     Attributes:
         x, y: Grid coordinates
         condition: Can be "Fine", "On Fire", or "Burned Out"
-        unique_id: (x,y) tuple. 
+        unique_id: (x,y) tuple.
+        forest_density: density of the forest.
+        p: probability of growing a tree on an empty space.
+        f: probability of a tree catching fire without having a burning neighbor.
     
-    unique_id isn't strictly necessary here, but it's good practice to give one to each
-    agent anyway.
+    unique_id isn't strictly necessary here, but it's good practice to give one to each agent anyway.
     '''
-    def __init__(self, model, pos, tree):
+    def __init__(self, model, pos, forest_density, p, f):
         '''
         Create a new tree.
         Args:
@@ -23,11 +25,11 @@ class DrosselSchwabl(Agent):
         super().__init__(pos, model)
         self.pos = pos
         self.unique_id = pos
-        self.condition = "Fine" if tree else "Empty"
+        self.condition = "Fine" if random.random() < forest_density else "Empty"
         self.last_condition = self.condition
         self.advance = True
-        self.p = 0.1
-        self.f = 0.1
+        self.p = p
+        self.f = f
 
     def set_on_fire(self):
         if self.condition == "Fine":
@@ -49,19 +51,17 @@ class DrosselSchwabl(Agent):
         If the tree is on fire, spread it to fine trees nearby.
         If the tree is fine, catch fire with probability f.
         '''
-        if self.last_condition == "Empty":
-            if random.random() < self.p:
-                self.condition = "Fine"
+        if (self.last_condition == "Empty" or self.last_condition == "Burned Out") and random.random() < self.p:
+            self.condition = "Fine" # An empty space fills with a tree with probability p
 
         if self.last_condition == "On Fire":
             neighbors = self.model.grid.get_neighbors(self.pos, moore=False)
             for neighbor in neighbors:
-                neighbor.set_on_fire()
-            self.condition = "Burned Out"
+                neighbor.set_on_fire() # A tree will burn if at least one neighbor is burning
+            self.condition = "Burned Out" # A burning cell turns into an empty cell
         
-        if self.last_condition == "Fine":
-            if random.random() < self.f:
-                self.condition = "On Fire"
+        if self.last_condition == "Fine" and random.random() < self.f:
+            self.condition = "On Fire" # A tree ignites with probability f even if no neighbor is burning
     
     def estabilize_step(self):
         '''
