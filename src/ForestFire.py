@@ -9,7 +9,7 @@ class ForestFire(Model):
     '''
     Simple Forest Fire model.
     '''
-    def __init__(self, width, height, density, TreeCell, p, f):
+    def __init__(self, width, height, density, protection, TreeCell, p, f):
         '''
         Create a new forest fire model.
         
@@ -21,14 +21,14 @@ class ForestFire(Model):
         self.width = width
         self.height = height
         self.density = density
+        self.protection = protection
         self.p = p
         self.f = f
         
         # Set up model objects
         self.schedule = RandomActivation(self)
         self.grid = Grid(width, height, torus=False)
-        self.dc = DataCollector({"Empty": lambda m: self.count_type(m, "Empty"),
-                                 "Fine": lambda m: self.count_type(m, "Fine"),
+        self.dc = DataCollector({"Fine": lambda m: self.count_type(m, "Fine"),
                                  "On Fire": lambda m: self.count_type(m, "On Fire"),
                                  "Burned Out": lambda m: self.count_type(m, "Burned Out")})
         
@@ -36,7 +36,7 @@ class ForestFire(Model):
         for x in range(self.width):
             for y in range(self.height):
                 # Create a tree
-                new_tree = TreeCell(self, (x, y), self.density, self.p, self.f)
+                new_tree = TreeCell(self, (x, y), self.density, self.protection, self.p, self.f)
                 self.grid[x][y] = new_tree
                 self.schedule.add(new_tree)
         self.running = True

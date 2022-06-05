@@ -21,7 +21,8 @@ def agent_portrayal(agent):
         "Empty": "white",
         "Fine" : "green",
         "On Fire" : "red",
-        "Burned Out" : "black"
+        "Burned Out" : "black",
+        "Protected": "brown",
     }
     portrayal = {"Shape": "rect",
                  "Color": state_to_color[agent.condition],
@@ -50,7 +51,7 @@ def pick_a_grid_size(grid_sizes : List[int]) -> int:
 
 def main():
     models = [Simple, SingleSpread, DrosselSchwabl]
-    grid_sizes = [20, 50, 100]
+    grid_sizes = [5, 20, 50, 100]
 
     model_choice = pick_a_model(models)
     grid_choice = pick_a_grid_size(grid_sizes)
@@ -58,6 +59,10 @@ def main():
     (p, f) = (0.1, 0.1)
     density = float(input("Pick a density: (from 0 to 1):> "))
     assert 0 < density <= 1
+
+    protection = float(input(f"Pick a protection rate: (from 0 to {1-density}):> "))
+    assert 0 < protection <= 1 - density
+
     if model_choice == 2:
         p = float(input("Pick a regeneration rate: (from 0 to 1):> "))
         f = float(input("Pick a fire ignition rate: (from 0 to 1):> "))
@@ -74,6 +79,7 @@ def main():
             "width": grid_sizes[grid_choice],
             "height": grid_sizes[grid_choice],
             "density": density,
+            "protection": protection,
             "TreeCell": models[model_choice],
             "p": p,
             "f": f

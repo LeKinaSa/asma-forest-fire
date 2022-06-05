@@ -8,15 +8,16 @@ class DrosselSchwabl(Agent):
     
     Attributes:
         x, y: Grid coordinates
-        condition: Can be "Fine", "On Fire", or "Burned Out"
+        condition: Can be "Empty", "Protected", "Fine", "On Fire", or "Burned Out"
         unique_id: (x,y) tuple.
         forest_density: density of the forest.
+        protection: density of the protection systems in the forest.
         p: probability of growing a tree on an empty space.
         f: probability of a tree catching fire without having a burning neighbor.
     
     unique_id isn't strictly necessary here, but it's good practice to give one to each agent anyway.
     '''
-    def __init__(self, model, pos, forest_density, p, f):
+    def __init__(self, model, pos, forest_density, protection, p, f):
         '''
         Create a new tree.
         Args:
@@ -25,7 +26,14 @@ class DrosselSchwabl(Agent):
         super().__init__(pos, model)
         self.pos = pos
         self.unique_id = pos
-        self.condition = "Fine" if random.random() < forest_density else "Empty"
+        
+        random_value = random.random()
+        self.condition = "Empty"
+        if random_value < forest_density:
+            self.condition = "Fine"
+        if random_value > 1 - protection:
+            self.condition = "Protected"
+        
         self.last_condition = self.condition
         self.advance = True
         self.p = p
