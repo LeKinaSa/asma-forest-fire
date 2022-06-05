@@ -22,7 +22,7 @@ def agent_portrayal(agent):
         "Fine" : "green",
         "On Fire" : "red",
         "Burned Out" : "black",
-        "Protected": "brown",
+        "Protected": "cyan",
     }
     portrayal = {"Shape": "rect",
                  "Color": state_to_color[agent.condition],
@@ -61,7 +61,7 @@ def main():
     assert 0 < density <= 1
 
     protection = float(input(f"Pick a protection rate: (from 0 to {1-density}):> "))
-    assert 0 < protection <= 1 - density
+    assert 0 <= protection <= 1 - density
 
     if model_choice == 2:
         p = float(input("Pick a regeneration rate: (from 0 to 1):> "))
@@ -92,7 +92,7 @@ def main():
         graphs = False
     
     if graphs:
-        fire = ForestFire(grid_sizes[grid_choice], grid_sizes[grid_choice], density, models[model_choice], p, f)
+        fire = ForestFire(grid_sizes[grid_choice], grid_sizes[grid_choice], density, protection, models[model_choice], p, f)
         fire.run_model()
         results = fire.dc.get_model_vars_dataframe()
         sns.lineplot(data=results)
@@ -100,8 +100,9 @@ def main():
 
         param_set = dict(height=[grid_sizes[grid_choice]],
                         width=[grid_sizes[grid_choice]],
-                        density=np.linspace(0,1,101)[1:], # Vary density from 0.01 to 1, in 0.01 increments
+                        density=np.linspace(0, 1, 101)[1:], # Vary density from 0.01 to 1, in 0.01 increments
                         TreeCell=[models[model_choice]],
+                        protection=[0],
                         p=[p], f=[f]
                         )
 
@@ -110,12 +111,40 @@ def main():
                                                 m.schedule.get_agent_count()) }
 
         # Create the batch runner
-        param_run = BatchRunner(ForestFire, param_set, iterations=2, model_reporters=model_reporter)
+        param_run = BatchRunner(ForestFire, param_set, iterations=5, model_reporters=model_reporter)
         param_run.run_all()
         df = param_run.get_model_vars_dataframe()
         plt.scatter(df.density, df.BurnedOut)
-        plt.xlim(0,1)
+        plt.xlim(0, 1)
         plt.show()
+    
+    param_set = dict(height=[grid_sizes[grid_choice]],
+                    width=[grid_sizes[grid_choice]],
+                    density=np.linspace(0, 1, 101)[1:], # Vary density from 0.01 to 1, in 0.01 increments
+                    TreeCell=[models[model_choice]],
+                    protection=[None],
+                    p=[p], f=[f]
+                    )
+
+    # At the end of each model run, calculate the fraction of trees which are Burned Out
+    model_reporter = {"BurnedOut": lambda m: (ForestFire.count_type(m, "Burned Out") / 
+                                              m.schedule.get_agent_count()),
+                      "Fine": lambda m: (ForestFire.count_type(m, "Fine") / 
+                                              m.schedule.get_agent_count()),
+                      "OnFire": lambda m: (ForestFire.count_type(m, "On Fire") / 
+                                              m.schedule.get_agent_count())}
+    
+    # Create the batch runner
+    param_run = BatchRunner(ForestFire, param_set, iterations=5, model_reporters=model_reporter)
+    param_run.run_all()
+    df = param_run.get_model_vars_dataframe()
+    plt.scatter(df.protection, df.BurnedOut)
+    plt.xlim(0, 1)
+    plt.show()
+    
+    plt.scatter(df.protection, df.Fine)
+    plt.xlim(0, 1)
+    plt.show()
 
 if __name__ == "__main__":
     main()

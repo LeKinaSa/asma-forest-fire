@@ -21,7 +21,7 @@ class ForestFire(Model):
         self.width = width
         self.height = height
         self.density = density
-        self.protection = protection
+        self.protection = protection if protection != None else 1-density
         self.p = p
         self.f = f
         
@@ -49,7 +49,7 @@ class ForestFire(Model):
         self.schedule.step()
         self.dc.collect(self)
         # Halt if no more fire or too much iterations
-        if self.count_type(self, "On Fire") == 0 or self.steps > 1000:
+        if self.count_type(self, "On Fire") == 0 or self.steps > 250:
             self.running = False
         self.steps += 1
     
