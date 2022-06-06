@@ -118,27 +118,6 @@ def main():
         plt.xlim(0, 1)
         plt.show()
 
-        param_set = dict(height=[grid_sizes[grid_choice]],
-                        width=[grid_sizes[grid_choice]],
-                        density=[density], # Vary density from 0.01 to 1, in 0.01 increments
-                        TreeCell=[models[model_choice]],
-                        protection=[0],
-                        p=np.linspace(0, 1, 11)[1:], f=np.linspace(0, 1, 11)[1:] # 11 11
-                        )
-
-        # At the end of each model run, calculate the fraction of trees which are Burned Out
-        model_reporter = {"BurntFine": lambda m: (ForestFire.count_type(m, "Burned Out") / 
-                                                ForestFire.count_type(m, "Fine"))}
-
-        # Create the batch runner
-        param_run = BatchRunner(ForestFire, param_set, iterations=2, model_reporters=model_reporter)
-        param_run.run_all()
-        df = param_run.get_model_vars_dataframe()
-        print(df)
-        sns.displot(df, x="p", y="f", hue="BurntFine")
-        plt.xlim(0, 1)
-        plt.show()
-
         special_graph = False
         if input("Special Graphs? [y|N]:> ") in ("y", "Y"):
             special_graph = True
