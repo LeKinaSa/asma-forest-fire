@@ -117,34 +117,50 @@ def main():
         plt.scatter(df.density, df.BurnedOut)
         plt.xlim(0, 1)
         plt.show()
-    
-    param_set = dict(height=[grid_sizes[grid_choice]],
-                    width=[grid_sizes[grid_choice]],
-                    density=np.linspace(0, 1, 101)[1:], # Vary density from 0.01 to 1, in 0.01 increments
-                    TreeCell=[models[model_choice]],
-                    protection=[None],
-                    p=[p], f=[f]
-                    )
 
-    # At the end of each model run, calculate the fraction of trees which are Burned Out
-    model_reporter = {"BurnedOut": lambda m: (ForestFire.count_type(m, "Burned Out") / 
-                                              m.schedule.get_agent_count()),
-                      "Fine": lambda m: (ForestFire.count_type(m, "Fine") / 
-                                              m.schedule.get_agent_count()),
-                      "OnFire": lambda m: (ForestFire.count_type(m, "On Fire") / 
-                                              m.schedule.get_agent_count())}
-    
-    # Create the batch runner
-    param_run = BatchRunner(ForestFire, param_set, iterations=5, model_reporters=model_reporter)
-    param_run.run_all()
-    df = param_run.get_model_vars_dataframe()
-    plt.scatter(df.protection, df.BurnedOut)
-    plt.xlim(0, 1)
-    plt.show()
-    
-    plt.scatter(df.protection, df.Fine)
-    plt.xlim(0, 1)
-    plt.show()
+        special_graph = False
+        if input("Special Graphs? [y|N]:> ") in ("y", "Y"):
+            special_graph = True
+
+        if special_graph:
+            param_set = dict(height=[grid_sizes[grid_choice]],
+                            width=[grid_sizes[grid_choice]],
+                            density=np.linspace(0, 1, 101)[1:], # Vary density from 0.01 to 1, in 0.01 increments
+                            TreeCell=[models[model_choice]],
+                            protection=[None],
+                            p=[p], f=[f]
+                            )
+
+            # At the end of each model run, calculate the fraction of trees which are Burned Out
+            model_reporter = {"BurnedOut": lambda m: (ForestFire.count_type(m, "Burned Out") / 
+                                                    m.schedule.get_agent_count()),
+                            "Fine": lambda m: (ForestFire.count_type(m, "Fine") / 
+                                                    m.schedule.get_agent_count()),
+                            "OnFire": lambda m: (ForestFire.count_type(m, "On Fire") / 
+                                                    m.schedule.get_agent_count()),
+                            "BurntFine": lambda m: (ForestFire.count_type(m, "Burned Out") / 
+                                                    ForestFire.count_type(m, "Fine"))}
+            
+            # Create the batch runner
+            param_run = BatchRunner(ForestFire, param_set, iterations=2, model_reporters=model_reporter)
+            param_run.run_all()
+            df = param_run.get_model_vars_dataframe()
+
+            plt.scatter(df.density, df.BurnedOut)
+            plt.xlim(0, 1)
+            plt.show()
+
+            plt.scatter(df.density, df.Fine)
+            plt.xlim(0, 1)
+            plt.show()
+
+            plt.scatter(df.density, df.OnFire)
+            plt.xlim(0, 1)
+            plt.show()
+
+            plt.scatter(df.density, df.BurntFine)
+            plt.show()
+        
 
 if __name__ == "__main__":
     main()
